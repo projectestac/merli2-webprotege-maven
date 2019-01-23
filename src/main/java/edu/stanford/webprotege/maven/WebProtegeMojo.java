@@ -12,6 +12,7 @@ import org.apache.maven.project.MavenProject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
@@ -30,41 +31,53 @@ public class WebProtegeMojo extends AbstractMojo {
     @SuppressWarnings("unchecked")
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        MavenSourceWriter writer = new MavenSourceWriter(project, getLog());
+
+        Set<PortletTypeDescriptor> tds = new HashSet<>();
+        Set<PortletModuleDescriptor> mds = new HashSet<>();
+
         try {
             for(Object compileSourceRoot : new ArrayList<>(project.getCompileSourceRoots())) {
                 String sourceRoot = (String) compileSourceRoot;
-                processCompileSourceRoot(sourceRoot);
+                JavaProjectBuilder builder = getProjectBuilder(sourceRoot);
+
+                tds.addAll(getTypeDescriptors(builder));
+                mds.addAll(getModuleDescriptors(builder));
             }
+
+            WebProtegeCodeGeneratorVelocityImpl generator =
+                new WebProtegeCodeGeneratorVelocityImpl(tds, mds, writer);
+
+            generator.generate();
+
+            logPortletDescriptors(tds);
         } catch (IOException e) {
             getLog().error(e.getMessage(), e);
         }
     }
 
-    private void processCompileSourceRoot(String sourceRoot) throws IOException {
-        try {
-            JavaProjectBuilder builder = getProjectBuilder(sourceRoot);
-            AnnotatedPortletClassExtractor extractor = new AnnotatedPortletClassExtractor(builder);
-            Set<AnnotatedPortletClass> portletClasses = extractor.findAnnotatedPortletClasses();
-            Set<PortletTypeDescriptor> descriptors = portletClasses.stream()
-                    .map(c -> new PortletTypeDescriptorBuilder(
-                            c.getJavaClass(),
-                            c.getJavaAnnotation()).build()
-                    )
-                    .collect(toSet());
-            logPortletDescriptors(descriptors);
 
-            AnnotatedPortletModuleClassExtractor moduleClassExtractor = new AnnotatedPortletModuleClassExtractor(builder);
-            Set<PortletModuleDescriptor> moduleDescriptors = moduleClassExtractor.findAnnotatedProjectModulePlugins();
-            WebProtegeCodeGeneratorVelocityImpl gen = new WebProtegeCodeGeneratorVelocityImpl(
-                    descriptors,
-                    moduleDescriptors,
-                    new MavenSourceWriter(project, getLog()));
-            gen.generate();
-        } catch (Exception e) {
-            getLog().error(e);
-        }
+    private Set<PortletTypeDescriptor> getTypeDescriptors(JavaProjectBuilder builder) {
+        AnnotatedPortletClassExtractor extractor =
+            new AnnotatedPortletClassExtractor(builder);
 
+        Set<AnnotatedPortletClass> portletClasses =
+            extractor.findAnnotatedPortletClasses();
+
+        return portletClasses.stream().map(c ->
+            new PortletTypeDescriptorBuilder(
+                c.getJavaClass(), c.getJavaAnnotation()).build()
+            ).collect(toSet());
     }
+
+
+    private Set<PortletModuleDescriptor> getModuleDescriptors(JavaProjectBuilder builder) {
+        AnnotatedPortletModuleClassExtractor moduleClassExtractor =
+            new AnnotatedPortletModuleClassExtractor(builder);
+
+        return moduleClassExtractor.findAnnotatedProjectModulePlugins();
+    }
+
 
     private JavaProjectBuilder getProjectBuilder(String sourceRoot) {
         JavaProjectBuilder builder = new JavaProjectBuilder();
@@ -74,9 +87,8 @@ public class WebProtegeMojo extends AbstractMojo {
     }
 
     private void logPortletDescriptors(Set<PortletTypeDescriptor> descriptors) {
-        getLog().info("[WebProtegeMojo]  Portlets:");
         for(PortletTypeDescriptor d : descriptors) {
-            getLog().info("[WebProtegeMojo]        " + d);
+            getLog().info("[Portlet] " + d.getId());
         }
     }
 }

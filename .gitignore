@@ -16,4 +16,8 @@ hs_err_pid*
 
 /target
 
-velocity.log
+velocity.*
+.classpath
+.project
+.settings
+~$
