@@ -68,6 +68,7 @@ public class WebProtegeCodeGeneratorVelocityImpl {
 
         generateSource("PortletFactoryGenerated", PACKAGE_NAME, engine, context);
         generateSource("PortletModulesGenerated", PACKAGE_NAME, engine, context);
+        generateSource("Descriptors", PACKAGE_NAME, engine, context);
     }
 
 

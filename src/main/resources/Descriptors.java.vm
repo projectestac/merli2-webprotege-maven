@@ -1,0 +1,29 @@
+package edu.stanford.bmir.protege.web.client.portlet;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.i18n.client.Constants;
+import com.google.gwt.i18n.client.LocalizableResource.DefaultLocale;
+
+
+/**
+ * Geneared portlet descriptor translations.
+ */
+@DefaultLocale("en")
+public interface Descriptors extends Constants {
+
+    /** Instance of this interface */
+    static final Descriptors i = GWT.create(Descriptors.class);
+
+#foreach($descriptor in $descriptors)
+    /** Title for $descriptor.getId() */
+    @Key("$descriptor.getTitleMD5()")
+    @DefaultStringValue("$descriptor.getTitle()")
+    String _$descriptor.getTitleMD5()();
+
+    /** Tooltip for $descriptor.getId() */
+    @Key("$descriptor.getTooltipMD5()")
+    @DefaultStringValue("$descriptor.getTooltip()")
+    String _$descriptor.getTooltipMD5()();
+
+#end
+}

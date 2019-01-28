@@ -57,11 +57,13 @@ public class PortletFactoryGenerated implements PortletFactory {
 
             // $desc.canonicalClassName
             addPortlet(
-                    new PortletDescriptor(
-                            new PortletId("$desc.getId()"),
-                            "$desc.getEscapedTitle()",
-                            "$desc.getEscapedTooltip()"),
-                    providerOf_$desc.getSimpleName());
+                new PortletDescriptor(
+                    new PortletId("$desc.getId()"),
+                    Descriptors.i._$desc.getTitleMD5()(),
+                    Descriptors.i._$desc.getTooltipMD5()()
+                ),
+                providerOf_$desc.getSimpleName()
+            );
 
         #end
     }

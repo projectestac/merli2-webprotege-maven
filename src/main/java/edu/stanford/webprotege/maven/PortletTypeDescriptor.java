@@ -1,6 +1,10 @@
 package edu.stanford.webprotege.maven;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import java.util.Comparator;
@@ -28,6 +32,16 @@ public class PortletTypeDescriptor implements Comparable<PortletTypeDescriptor> 
 
     private final String tooltip;
 
+    /** MD5 hash of the title */
+    private final String titleMD5;
+
+    /** MD5 hash of the tooltip */
+    private final String tooltipMD5;
+
+    /** MD5 hashing function */
+    private final HashFunction md5 = Hashing.md5();
+
+
     /**
      * Constructs a PortletTypeDescriptor that describes a type of portlet
      * @param canonicalClassName The portlet class name.  Not {@code null}.
@@ -52,7 +66,11 @@ public class PortletTypeDescriptor implements Comparable<PortletTypeDescriptor> 
         this.packageName = checkNotNull(packageName);
         this.tooltip = checkNotNull(tooltip);
         checkArgument(!tooltip.startsWith("\"") && !tooltip.endsWith("\""));
+
+        titleMD5 = makeHash(title, id + "title");
+        tooltipMD5 = makeHash(tooltip, id + "tooltip");
     }
+
 
     /**
      * Gets the simple name of the portlet class.
@@ -102,6 +120,15 @@ public class PortletTypeDescriptor implements Comparable<PortletTypeDescriptor> 
         return StringEscapeUtils.escapeJava(title);
     }
 
+
+    /**
+     * Returns the MD5 hash of the title.
+     */
+    public String getTitleMD5() {
+        return titleMD5;
+    }
+
+
     /**
      * Gets the tooltip of the portlet.
      * @return The portlet tooltip.  Not {@code null}.
@@ -117,6 +144,15 @@ public class PortletTypeDescriptor implements Comparable<PortletTypeDescriptor> 
     public String getEscapedTooltip() {
         return StringEscapeUtils.escapeJava(tooltip);
     }
+
+
+    /**
+     * Returns the MD5 hash of the tooltip text.
+     */
+    public String getTooltipMD5() {
+        return tooltipMD5;
+    }
+
 
     @Override
     public int hashCode() {
@@ -156,4 +192,22 @@ public class PortletTypeDescriptor implements Comparable<PortletTypeDescriptor> 
     public int compareTo(PortletTypeDescriptor o) {
         return this.canonicalClassName.compareTo(o.canonicalClassName);
     }
+
+
+    /**
+     * Generates a MD5 hash for the given portlet text. This method
+     * returns a hash string that can be used as a translation key.
+     *
+     * @param text      Text to hash
+     * @param context   Translation context
+     *
+     * @return          Unique hash
+     */
+    private String makeHash(String text, String context) {
+        String string = context + text;
+        HashCode hash = md5.hashString(string, Charsets.UTF_8);
+
+        return String.valueOf(hash).toUpperCase();
+    }
+
 }
