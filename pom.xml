@@ -8,7 +8,6 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>cat.xtec.merli</groupId>
   <artifactId>merli-maven-webprotege</artifactId>
   <version>${revision}</version>
   <packaging>maven-plugin</packaging>
@@ -18,7 +17,7 @@
   <parent>
     <groupId>cat.xtec.merli</groupId>
     <artifactId>merli-maven-plugins</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0</version>
   </parent>
 
   <!-- Builds =========================================================== -->
